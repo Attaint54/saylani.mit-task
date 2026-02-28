@@ -246,7 +246,7 @@
       const password = document.getElementById('reg-password').value;
       if (!name || !email || !age || !gender || !contact || !password) { showToast('Please fill all fields.', 'warning'); return; }
 
-      const result = await registerUser(name, email, password, 'Patient');
+      const result = await registerUser(name, email, password, 'Patient', gender);
       if (result.success) {
         // Also add to patients collection
         await db.collection('patients').doc(result.uid).set({

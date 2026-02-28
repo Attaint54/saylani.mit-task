@@ -106,7 +106,7 @@ async function loginUser(email, password) {
 }
 
 // --- Register (Admin creates staff; also used for patient self-registration) ---
-async function registerUser(name, email, password, role) {
+async function registerUser(name, email, password, role, gender = '') {
     try {
         const cred = await auth.createUserWithEmailAndPassword(email, password);
         await cred.user.updateProfile({ displayName: name }); // Save name to Firebase Auth
@@ -117,9 +117,25 @@ async function registerUser(name, email, password, role) {
             name: name,
             email: email,
             role: role,
+            gender: gender,
             subscriptionPlan: 'Free',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        // Also save to specialized collections to maintain separate lists if needed
+        const baseData = {
+            name: name,
+            email: email,
+            gender: gender,
+            userId: uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (role === 'Doctor') {
+            await db.collection('doctors').doc(uid).set(baseData);
+        } else if (role === 'Receptionist') {
+            await db.collection('receptionists').doc(uid).set(baseData);
+        }
 
         return { success: true, uid: uid };
     } catch (err) {

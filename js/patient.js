@@ -109,6 +109,48 @@ function renderProfile() {
     document.getElementById('profile-joined').textContent = joined ? joined.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : '—';
 }
 
+function openEditProfileModal() {
+    if (!patientData) return;
+    document.getElementById('edit-profile-age').value = patientData.age || '';
+    document.getElementById('edit-profile-gender').value = patientData.gender || '';
+    document.getElementById('edit-profile-contact').value = patientData.contact || '';
+    document.getElementById('edit-profile-modal').classList.add('active');
+}
+
+async function handleEditProfile(e) {
+    e.preventDefault();
+    const age = document.getElementById('edit-profile-age').value;
+    const gender = document.getElementById('edit-profile-gender').value;
+    const contact = document.getElementById('edit-profile-contact').value.trim();
+
+    const btn = document.getElementById('edit-profile-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        await db.collection('patients').doc(patientData.id).update({
+            age: age ? parseInt(age) : '',
+            gender: gender,
+            contact: contact
+        });
+
+        // Update local state and re-render
+        patientData.age = age;
+        patientData.gender = gender;
+        patientData.contact = contact;
+        renderProfile();
+
+        showToast('Profile updated successfully!', 'success');
+        closeModal('edit-profile-modal');
+    } catch (err) {
+        console.error('Failed to update profile:', err);
+        showToast('Error updating profile: ' + err.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+}
+
 // =============================================
 // Stats
 // =============================================
@@ -449,7 +491,7 @@ async function handleBookAppointment(e) {
 }
 
 // Close modal when clicking outside
-document.getElementById('booking-modal')?.addEventListener('click', function(e) {
+document.getElementById('booking-modal')?.addEventListener('click', function (e) {
     if (e.target === this) closeBookingModal();
 });
 

@@ -250,6 +250,7 @@ function renderDoctorsTable() {
         </div>
       </td>
       <td><span class="user-row-email">${escapeHtml(doc.email)}</span></td>
+      <td>${doc.gender || '—'}</td>
       <td><small>${formatDate(doc.createdAt)}</small></td>
       <td>
         <button class="btn btn-secondary btn-sm" onclick="openChangeRoleModal('${doc.id}', '${escapeHtml(doc.name)}', '${escapeHtml(doc.email)}')">Change Role</button>
@@ -276,6 +277,7 @@ function renderReceptionistsTable() {
         </div>
       </td>
       <td><span class="user-row-email">${escapeHtml(rec.email)}</span></td>
+      <td>${rec.gender || '—'}</td>
       <td><small>${formatDate(rec.createdAt)}</small></td>
       <td>
         <button class="btn btn-secondary btn-sm" onclick="openChangeRoleModal('${rec.id}', '${escapeHtml(rec.name)}', '${escapeHtml(rec.email)}')">Change Role</button>
@@ -393,9 +395,10 @@ async function handleAddUser(e) {
     const name = document.getElementById('new-user-name').value.trim();
     const email = document.getElementById('new-user-email').value.trim();
     const password = document.getElementById('new-user-password').value;
+    const gender = document.getElementById('new-user-gender').value;
     const role = document.getElementById('new-user-role').value;
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !gender) {
         showToast('Please fill all fields.', 'warning');
         return;
     }
@@ -409,7 +412,7 @@ async function handleAddUser(e) {
     const currentUser = auth.currentUser;
     const adminEmail = currentUser.email;
 
-    const result = await registerUser(name, email, password, role);
+    const result = await registerUser(name, email, password, role, gender);
 
     if (result.success) {
         showToast(`${role} "${name}" created successfully!`, 'success');
@@ -438,10 +441,14 @@ async function deleteUser(uid, role) {
 
     try {
         await db.collection('users').doc(uid).delete();
+        await db.collection('doctors').doc(uid).delete();
+        await db.collection('receptionists').doc(uid).delete();
+        await db.collection('patients').doc(uid).delete();
         showToast(`${role} removed successfully.`, 'success');
 
         if (role === 'Doctor') { await loadDoctors(); updateStats(); }
         else if (role === 'Receptionist') { await loadReceptionists(); }
+        else if (role === 'Patient') { await loadPatients(); }
     } catch (err) {
         console.error('Delete error:', err);
         showToast('Failed to remove user: ' + err.message, 'error');
@@ -470,31 +477,47 @@ async function handleChangeRole(e) {
     btn.textContent = 'Updating...';
 
     try {
-        // Find existing patient record to get name
-        const patientDoc = await db.collection('patients').doc(changingUserId).get();
-        const patientData = patientDoc.exists ? patientDoc.data() : { name: document.getElementById('change-role-name').value };
+        // Find existing user record to get name and gender
+        const userDoc = await db.collection('users').doc(changingUserId).get();
+        const userData = userDoc.exists ? userDoc.data() : { name: document.getElementById('change-role-name').value, gender: '' };
 
         // Update or Create the users collection record
         await db.collection('users').doc(changingUserId).set({
             uid: changingUserId,
-            name: patientData.name,
+            name: userData.name,
             email: changingUserEmail,
             role: newRole,
             subscriptionPlan: 'Free',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        // If the role is changed to something else, remove them from the patients list
-        if (newRole !== 'Patient') {
-            await db.collection('patients').doc(changingUserId).delete();
+        const baseData = {
+            name: userData.name,
+            email: changingUserEmail,
+            gender: userData.gender || '',
+            userId: changingUserId,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Sync Patients Collection
+        if (newRole === 'Patient') {
+            await db.collection('patients').doc(changingUserId).set(baseData, { merge: true });
         } else {
-            // If they are changed BACK to Patient, ensure they exist in patients list
-            await db.collection('patients').doc(changingUserId).set({
-                name: patientData.name,
-                email: changingUserEmail,
-                userId: changingUserId,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
+            await db.collection('patients').doc(changingUserId).delete();
+        }
+
+        // Sync Doctors Collection
+        if (newRole === 'Doctor') {
+            await db.collection('doctors').doc(changingUserId).set(baseData, { merge: true });
+        } else {
+            await db.collection('doctors').doc(changingUserId).delete();
+        }
+
+        // Sync Receptionists Collection
+        if (newRole === 'Receptionist') {
+            await db.collection('receptionists').doc(changingUserId).set(baseData, { merge: true });
+        } else {
+            await db.collection('receptionists').doc(changingUserId).delete();
         }
         showToast(`Role updated to ${newRole}!`, 'success');
         closeModal('change-role-modal');
@@ -555,6 +578,7 @@ function renderFilteredUsers(tbodyId, list, avatarClass, cols) {
         </div>
       </td>
       <td><span class="user-row-email">${escapeHtml(u.email)}</span></td>
+      <td>${u.gender || '—'}</td>
       <td><small>${formatDate(u.createdAt)}</small></td>
       <td>
         <button class="btn btn-secondary btn-sm" onclick="openChangeRoleModal('${u.id}', '${escapeHtml(u.name)}', '${escapeHtml(u.email)}')">Change Role</button>

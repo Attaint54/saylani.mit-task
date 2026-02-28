@@ -133,13 +133,14 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
+                                <th>Gender</th>
                                 <th>Joined</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="doctors-tbody">
                             <tr>
-                                <td colspan="4" class="text-center" style="padding:40px">
+                                <td colspan="5" class="text-center" style="padding:40px">
                                     <div class="spinner" style="margin:0 auto"></div>
                                 </td>
                             </tr>
@@ -165,13 +166,14 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
+                                <th>Gender</th>
                                 <th>Joined</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="receptionists-tbody">
                             <tr>
-                                <td colspan="4" class="text-center" style="padding:40px">
+                                <td colspan="5" class="text-center" style="padding:40px">
                                     <div class="spinner" style="margin:0 auto"></div>
                                 </td>
                             </tr>
@@ -302,6 +304,15 @@
                     <label for="new-user-email">Email</label>
                     <input type="email" id="new-user-email" class="form-input" placeholder="doctor@clinic.com"
                         required />
+                </div>
+                <div class="form-group">
+                    <label for="new-user-gender">Gender</label>
+                    <select id="new-user-gender" class="form-input form-select" required>
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="new-user-password">Password</label>

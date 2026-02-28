@@ -59,8 +59,14 @@
                 <div class="glass-card profile-card fade-in" id="profile-card">
                     <div class="profile-avatar" id="profile-avatar">P</div>
                     <div class="profile-info">
-                        <h2 id="profile-name">—</h2>
-                        <p id="profile-email">—</p>
+                        <div style="display:flex;justify-content:space-between;align-items:start">
+                            <div>
+                                <h2 id="profile-name">—</h2>
+                                <p id="profile-email">—</p>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="openEditProfileModal()">Edit
+                                Profile</button>
+                        </div>
                         <div class="profile-meta">
                             <div class="meta-item"><small>Age</small><span id="profile-age">—</span></div>
                             <div class="meta-item"><small>Gender</small><span id="profile-gender">—</span></div>
@@ -135,6 +141,39 @@
                         <button type="submit" class="btn btn-primary btn-lg" id="book-btn"
                             style="width:100%;justify-content:center;margin-top:var(--spacing-md)">
                             Confirm Appointment
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ====== EDIT PROFILE MODAL ====== -->
+            <div class="modal-overlay" id="edit-profile-modal">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3>✏️ Edit Profile</h3>
+                        <button class="modal-close" onclick="closeModal('edit-profile-modal')">✕</button>
+                    </div>
+                    <form id="edit-profile-form" onsubmit="handleEditProfile(event)">
+                        <div class="form-group">
+                            <label for="edit-profile-age">Age</label>
+                            <input type="number" id="edit-profile-age" class="form-input" required min="1" max="150" />
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-profile-gender">Gender</label>
+                            <select id="edit-profile-gender" class="form-input form-select" required>
+                                <option value="" disabled>Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-profile-contact">Contact Number</label>
+                            <input type="tel" id="edit-profile-contact" class="form-input" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg" id="edit-profile-btn"
+                            style="width:100%;justify-content:center;margin-top:var(--spacing-md)">
+                            Save Changes
                         </button>
                     </form>
                 </div>
