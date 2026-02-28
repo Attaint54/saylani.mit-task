@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Setup Admin</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body style="display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column;">
+    <div class="glass-card" style="text-align:center; padding: 2rem;">
+        <h2>Fix User Record</h2>
+        <p style="margin-bottom: 1rem;">This will create an Admin record in Firestore for the currently logged-in
+            Authentication user.</p>
+        <button id="setupBtn" class="btn btn-primary" style="margin-bottom: 1rem;">Make me Admin</button>
+        <div id="status" style="font-weight:bold; color:var(--warning);">Checking login status...</div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script>
+        firebase.auth().onAuthStateChanged(user => {
+            const statusEl = document.getElementById('status');
+            if (user) {
+                statusEl.innerText = "You are logged in as: " + user.email;
+                statusEl.style.color = "var(--success)";
+            } else {
+                statusEl.innerText = "You are NOT logged in. Please log in at index.html first.";
+                statusEl.style.color = "var(--danger)";
+            }
+        });
+
+        document.getElementById('setupBtn').addEventListener('click', async () => {
+            const user = firebase.auth().currentUser;
+            const statusEl = document.getElementById('status');
+            if (!user) {
+                statusEl.innerText = "Please log in at index.html first, then come back here.";
+                return;
+            }
+            try {
+                statusEl.innerText = "Creating Firestore record...";
+                await firebase.firestore().collection('users').doc(user.uid).set({
+                    uid: user.uid,
+                    name: "Admin User",
+                    email: user.email,
+                    role: 'Admin',
+                    subscriptionPlan: 'Free',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                statusEl.innerText = "Success! You are now an Admin. Go back to index.html and you should automatically be redirected to the admin page.";
+                statusEl.style.color = "var(--success)";
+            } catch (err) {
+                statusEl.innerText = "Error: " + err.message;
+                statusEl.style.color = "var(--danger)";
+            }
+        });
+    </script>
+</body>
+
+</html>

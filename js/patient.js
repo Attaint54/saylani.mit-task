@@ -379,3 +379,77 @@ function esc(str) {
     d.textContent = str;
     return d.innerHTML;
 }
+
+// =============================================
+// Appointment Booking
+// =============================================
+function openBookingModal() {
+    const select = document.getElementById('book-doctor');
+    // Reset form
+    document.getElementById('booking-form').reset();
+    // Populate doctors dropdown
+    select.innerHTML = '<option value="">— Choose a doctor —</option>';
+    Object.entries(doctorsMap).forEach(([id, doc]) => {
+        select.innerHTML += `<option value="${id}">Dr. ${esc(doc.name)}</option>`;
+    });
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('book-date').setAttribute('min', today);
+    document.getElementById('booking-modal').classList.add('active');
+}
+
+function closeBookingModal() {
+    document.getElementById('booking-modal').classList.remove('active');
+}
+
+async function handleBookAppointment(e) {
+    e.preventDefault();
+    const doctorId = document.getElementById('book-doctor').value;
+    const date = document.getElementById('book-date').value;
+    const time = document.getElementById('book-time').value;
+    const reason = document.getElementById('book-reason').value.trim();
+
+    if (!doctorId || !date || !time) {
+        showToast('Please fill all required fields.', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('book-btn');
+    btn.disabled = true;
+    btn.textContent = 'Booking...';
+
+    try {
+        const dateTime = new Date(`${date}T${time}`);
+        await db.collection('appointments').add({
+            patientId: patientData.id,
+            patientName: patientData.name || '',
+            doctorId: doctorId,
+            doctorName: doctorsMap[doctorId]?.name || '',
+            date: firebase.firestore.Timestamp.fromDate(dateTime),
+            reason: reason || 'General Visit',
+            status: 'Pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showToast('Appointment booked successfully!', 'success');
+        closeBookingModal();
+
+        // Reload appointments and refresh UI
+        await loadPatientAppointments();
+        updatePatientStats();
+        renderPatientAppts();
+        renderMedicalTimeline();
+    } catch (err) {
+        console.error(err);
+        showToast('Failed to book appointment. Please try again.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Confirm Appointment';
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('booking-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeBookingModal();
+});
+

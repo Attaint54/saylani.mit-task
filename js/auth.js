@@ -47,16 +47,31 @@ async function loginUser(email, password) {
         const uid = cred.user.uid;
 
         // Fetch user role from Firestore
-        const userDoc = await db.collection('users').doc(uid).get();
-        if (!userDoc.exists) {
-            showToast('User record not found. Contact admin.', 'error');
-            await auth.signOut();
-            hideLoading();
-            return;
-        }
+        let userDoc = await db.collection('users').doc(uid).get();
+        let role = 'Patient';
 
-        const userData = userDoc.data();
-        const role = userData.role;
+        if (!userDoc.exists) {
+            // Auto-create as Patient if missing
+            await db.collection('users').doc(uid).set({
+                uid: uid,
+                name: cred.user.displayName || 'New Patient',
+                email: cred.user.email,
+                role: 'Patient',
+                subscriptionPlan: 'Free',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            // Also ensure patient record exists
+            await db.collection('patients').doc(uid).set({
+                name: cred.user.displayName || 'New Patient',
+                email: cred.user.email,
+                age: '', gender: '', contact: '',
+                userId: uid, createdBy: uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        } else {
+            const userData = userDoc.data();
+            role = userData.role || 'Patient';
+        }
 
         // Redirect based on role
         switch (role) {
@@ -94,6 +109,7 @@ async function loginUser(email, password) {
 async function registerUser(name, email, password, role) {
     try {
         const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await cred.user.updateProfile({ displayName: name }); // Save name to Firebase Auth
         const uid = cred.user.uid;
 
         await db.collection('users').doc(uid).set({
@@ -138,13 +154,34 @@ function requireAuth(allowedRoles = []) {
             return;
         }
         try {
-            const userDoc = await db.collection('users').doc(user.uid).get();
+            let userDoc = await db.collection('users').doc(user.uid).get();
+            let userData = {};
+
             if (!userDoc.exists) {
-                await auth.signOut();
-                window.location.href = 'index.html';
-                return;
+                // Auto-create as Patient if missing here too (failsafe)
+                userData = {
+                    uid: user.uid,
+                    name: user.displayName || 'New Patient',
+                    email: user.email,
+                    role: 'Patient',
+                    subscriptionPlan: 'Free',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                await db.collection('users').doc(user.uid).set(userData);
+
+                await db.collection('patients').doc(user.uid).set({
+                    name: user.displayName || 'New Patient',
+                    email: user.email,
+                    age: '', gender: '', contact: '',
+                    userId: user.uid, createdBy: user.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } else {
+                userData = userDoc.data();
             }
-            const userData = userDoc.data();
+
+            if (!userData.role) userData.role = 'Patient';
+
             if (allowedRoles.length > 0 && !allowedRoles.includes(userData.role)) {
                 showToast('Access denied for your role.', 'error');
                 await auth.signOut();

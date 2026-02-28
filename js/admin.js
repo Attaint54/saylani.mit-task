@@ -252,6 +252,7 @@ function renderDoctorsTable() {
       <td><span class="user-row-email">${escapeHtml(doc.email)}</span></td>
       <td><small>${formatDate(doc.createdAt)}</small></td>
       <td>
+        <button class="btn btn-secondary btn-sm" onclick="openChangeRoleModal('${doc.id}', '${escapeHtml(doc.name)}', '${escapeHtml(doc.email)}')">Change Role</button>
         <button class="btn btn-danger btn-sm" onclick="deleteUser('${doc.id}', 'Doctor')">Remove</button>
       </td>
     </tr>
@@ -277,6 +278,7 @@ function renderReceptionistsTable() {
       <td><span class="user-row-email">${escapeHtml(rec.email)}</span></td>
       <td><small>${formatDate(rec.createdAt)}</small></td>
       <td>
+        <button class="btn btn-secondary btn-sm" onclick="openChangeRoleModal('${rec.id}', '${escapeHtml(rec.name)}', '${escapeHtml(rec.email)}')">Change Role</button>
         <button class="btn btn-danger btn-sm" onclick="deleteUser('${rec.id}', 'Receptionist')">Remove</button>
       </td>
     </tr>
@@ -286,7 +288,7 @@ function renderReceptionistsTable() {
 function renderPatientsTable() {
     const tbody = document.getElementById('patients-tbody');
     if (allPatients.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="padding:40px;color:var(--text-muted)">No patients registered yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:40px;color:var(--text-muted)">No patients registered yet.</td></tr>`;
         return;
     }
     tbody.innerHTML = allPatients.map(p => `
@@ -301,6 +303,9 @@ function renderPatientsTable() {
       <td>${p.gender || '—'}</td>
       <td>${escapeHtml(p.contact || '—')}</td>
       <td><small>${formatDate(p.createdAt)}</small></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openChangeRoleModal('${p.id}', '${escapeHtml(p.name)}', '${escapeHtml(p.email)}')">Change Role</button>
+      </td>
     </tr>
   `).join('');
 }
@@ -444,6 +449,74 @@ async function deleteUser(uid, role) {
 }
 
 // =============================================
+// Change Role
+// =============================================
+let changingUserId = '';
+let changingUserEmail = '';
+
+function openChangeRoleModal(uid, name, email) {
+    changingUserId = uid;
+    changingUserEmail = email;
+    document.getElementById('change-role-name').value = name;
+    document.getElementById('change-role-select').value = 'Patient';
+    document.getElementById('change-role-modal').classList.add('active');
+}
+
+async function handleChangeRole(e) {
+    e.preventDefault();
+    const newRole = document.getElementById('change-role-select').value;
+    const btn = document.getElementById('change-role-btn');
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+
+    try {
+        // Find existing patient record to get name
+        const patientDoc = await db.collection('patients').doc(changingUserId).get();
+        const patientData = patientDoc.exists ? patientDoc.data() : { name: document.getElementById('change-role-name').value };
+
+        // Update or Create the users collection record
+        await db.collection('users').doc(changingUserId).set({
+            uid: changingUserId,
+            name: patientData.name,
+            email: changingUserEmail,
+            role: newRole,
+            subscriptionPlan: 'Free',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // If the role is changed to something else, remove them from the patients list
+        if (newRole !== 'Patient') {
+            await db.collection('patients').doc(changingUserId).delete();
+        } else {
+            // If they are changed BACK to Patient, ensure they exist in patients list
+            await db.collection('patients').doc(changingUserId).set({
+                name: patientData.name,
+                email: changingUserEmail,
+                userId: changingUserId,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+        showToast(`Role updated to ${newRole}!`, 'success');
+        closeModal('change-role-modal');
+
+        // Reload lists
+        await Promise.all([loadDoctors(), loadReceptionists(), loadPatients()]);
+        updateStats();
+    } catch (err) {
+        console.error('Role update error:', err);
+        showToast('Failed to update role.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Update Role';
+    }
+}
+
+// Close modal on overlay click
+document.getElementById('change-role-modal').addEventListener('click', function (e) {
+    if (e.target === this) closeModal('change-role-modal');
+});
+
+// =============================================
 // Search / Filter
 // =============================================
 function filterTable(type) {
@@ -484,6 +557,7 @@ function renderFilteredUsers(tbodyId, list, avatarClass, cols) {
       <td><span class="user-row-email">${escapeHtml(u.email)}</span></td>
       <td><small>${formatDate(u.createdAt)}</small></td>
       <td>
+        <button class="btn btn-secondary btn-sm" onclick="openChangeRoleModal('${u.id}', '${escapeHtml(u.name)}', '${escapeHtml(u.email)}')">Change Role</button>
         <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}', '${u.role}')">Remove</button>
       </td>
     </tr>
@@ -493,7 +567,7 @@ function renderFilteredUsers(tbodyId, list, avatarClass, cols) {
 function renderFilteredPatients(tbodyId, list) {
     const tbody = document.getElementById(tbodyId);
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="padding:40px;color:var(--text-muted)">No results found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:40px;color:var(--text-muted)">No results found.</td></tr>`;
         return;
     }
     tbody.innerHTML = list.map(p => `

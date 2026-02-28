@@ -93,12 +93,50 @@
             <!-- ====== PAGE: APPOINTMENTS ====== -->
             <div class="page-content page-section" id="page-appointments" style="display:none">
                 <div class="glass-card fade-in">
-                    <h3 style="margin-bottom:var(--spacing-md)">My Appointments</h3>
+                    <div class="section-header">
+                        <h3>My Appointments</h3>
+                        <button class="btn btn-primary" onclick="openBookingModal()">📅 Book Appointment</button>
+                    </div>
                     <div id="patient-appointments">
                         <div class="empty-state">
                             <div class="spinner" style="margin:0 auto"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- ====== BOOKING MODAL ====== -->
+            <div class="modal-overlay" id="booking-modal">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3>📅 Book Appointment</h3>
+                        <button class="modal-close" onclick="closeBookingModal()">✕</button>
+                    </div>
+                    <form id="booking-form" onsubmit="handleBookAppointment(event)">
+                        <div class="form-group">
+                            <label for="book-doctor">Select Doctor</label>
+                            <select id="book-doctor" class="form-input form-select" required>
+                                <option value="">— Choose a doctor —</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="book-date">Appointment Date</label>
+                            <input type="date" id="book-date" class="form-input" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="book-time">Preferred Time</label>
+                            <input type="time" id="book-time" class="form-input" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="book-reason">Reason for Visit</label>
+                            <textarea id="book-reason" class="form-input form-textarea"
+                                placeholder="Describe your symptoms or reason..." rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg" id="book-btn"
+                            style="width:100%;justify-content:center;margin-top:var(--spacing-md)">
+                            Confirm Appointment
+                        </button>
+                    </form>
                 </div>
             </div>
 
