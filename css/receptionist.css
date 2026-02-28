@@ -1,0 +1,126 @@
+/* ================================================
+   Receptionist Dashboard — Specific Styles
+   ================================================ */
+
+/* Schedule Slot */
+.schedule-slot {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    transition: background var(--transition-fast);
+}
+
+.schedule-slot:last-child {
+    border-bottom: none;
+}
+
+.schedule-slot:hover {
+    background: rgba(15, 191, 165, 0.04);
+}
+
+.schedule-time {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-400);
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+.schedule-details {
+    flex: 1;
+}
+
+.schedule-patient {
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.schedule-doctor {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+/* Patient Card Compact */
+.patient-card-compact {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.patient-card-compact:hover {
+    border-color: var(--primary-500);
+    background: rgba(15, 191, 165, 0.05);
+}
+
+.patient-card-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--info), #818cf8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.patient-card-info h4 {
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.patient-card-info p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Date Filter */
+.date-filter {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.date-filter input[type="date"] {
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.date-filter input[type="date"]:focus {
+    border-color: var(--primary-500);
+}
+
+/* Fix date input icon color for dark mode */
+.date-filter input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7);
+    cursor: pointer;
+}
+
+/* Two Column Layout */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+@media (max-width: 900px) {
+    .two-col {
+        grid-template-columns: 1fr;
+    }
+}

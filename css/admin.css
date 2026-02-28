@@ -1,0 +1,192 @@
+/* ================================================
+   Admin Dashboard — Specific Styles
+   ================================================ */
+
+/* Stat Card Icons */
+.stat-icon-patients {
+    background: rgba(96, 165, 250, 0.15);
+    color: var(--info);
+}
+
+.stat-icon-doctors {
+    background: rgba(15, 191, 165, 0.15);
+    color: var(--primary-400);
+}
+
+.stat-icon-appointments {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--warning);
+}
+
+.stat-icon-revenue {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 280px;
+    width: 100%;
+}
+
+/* User Row Avatar */
+.user-row-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.avatar-doctor {
+    background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+}
+
+.avatar-receptionist {
+    background: linear-gradient(135deg, #f472b6, #a78bfa);
+}
+
+.avatar-admin {
+    background: linear-gradient(135deg, var(--warning), #fb923c);
+}
+
+.avatar-patient {
+    background: linear-gradient(135deg, var(--info), #818cf8);
+}
+
+.user-row-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.user-row-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.user-row-email {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Tab System */
+.tab-bar {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg-input);
+    border-radius: var(--radius-sm);
+    width: fit-content;
+    margin-bottom: var(--spacing-lg);
+}
+
+.tab-btn {
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    transition: all var(--transition-fast);
+}
+
+.tab-btn.active {
+    background: var(--primary-500);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(15, 191, 165, 0.3);
+}
+
+.tab-btn:hover:not(.active) {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Search Bar */
+.search-bar {
+    position: relative;
+    max-width: 320px;
+}
+
+.search-bar input {
+    padding-left: 38px;
+    width: 100%;
+}
+
+.search-bar-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+/* Recent Activity */
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 7px;
+    flex-shrink: 0;
+}
+
+.activity-dot.green {
+    background: var(--success);
+}
+
+.activity-dot.blue {
+    background: var(--info);
+}
+
+.activity-dot.yellow {
+    background: var(--warning);
+}
+
+.activity-text {
+    font-size: 0.88rem;
+}
+
+.activity-time {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}

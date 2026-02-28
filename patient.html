@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+        content="MedVault Patient Portal — View profile, appointment history, prescriptions, and download PDFs." />
+    <title>MedVault — Patient Portal</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/patient.css" />
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <!-- ====== SIDEBAR ====== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">🏥</div>
+                <span class="sidebar-brand">MedVault</span>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">My Portal</div>
+                <a class="nav-item active" onclick="switchPage('profile', this)">
+                    <span class="nav-icon">👤</span> My Profile
+                </a>
+                <a class="nav-item" onclick="switchPage('appointments', this)">
+                    <span class="nav-icon">📅</span> Appointments
+                </a>
+                <a class="nav-item" onclick="switchPage('prescriptions', this)">
+                    <span class="nav-icon">💊</span> Prescriptions
+                </a>
+                <a class="nav-item" onclick="switchPage('history', this)">
+                    <span class="nav-icon">📋</span> Medical History
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a class="nav-item" onclick="logoutUser()" style="color:var(--danger)">
+                    <span class="nav-icon">🚪</span> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- ====== MAIN CONTENT ====== -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn btn-icon mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                    <h1 class="topbar-title" id="page-title">My Profile</h1>
+                </div>
+                <div class="topbar-right">
+                    <span class="topbar-user-name" id="pt-name">Patient</span>
+                    <div class="topbar-avatar" id="pt-avatar">P</div>
+                </div>
+            </header>
+
+            <!-- ====== PAGE: PROFILE ====== -->
+            <div class="page-content page-section active" id="page-profile">
+                <div class="glass-card profile-card fade-in" id="profile-card">
+                    <div class="profile-avatar" id="profile-avatar">P</div>
+                    <div class="profile-info">
+                        <h2 id="profile-name">—</h2>
+                        <p id="profile-email">—</p>
+                        <div class="profile-meta">
+                            <div class="meta-item"><small>Age</small><span id="profile-age">—</span></div>
+                            <div class="meta-item"><small>Gender</small><span id="profile-gender">—</span></div>
+                            <div class="meta-item"><small>Contact</small><span id="profile-contact">—</span></div>
+                            <div class="meta-item"><small>Member Since</small><span id="profile-joined">—</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-3 mt-lg">
+                    <div class="glass-card stat-card fade-in">
+                        <div class="stat-icon" style="background:rgba(251,191,36,0.15);color:var(--warning)">📅</div>
+                        <div class="stat-value" id="stat-appts">0</div>
+                        <div class="stat-label">Total Appointments</div>
+                    </div>
+                    <div class="glass-card stat-card fade-in">
+                        <div class="stat-icon" style="background:rgba(52,211,153,0.15);color:var(--success)">💊</div>
+                        <div class="stat-value" id="stat-rx">0</div>
+                        <div class="stat-label">Prescriptions</div>
+                    </div>
+                    <div class="glass-card stat-card fade-in">
+                        <div class="stat-icon" style="background:rgba(96,165,250,0.15);color:var(--info)">🩺</div>
+                        <div class="stat-value" id="stat-next">—</div>
+                        <div class="stat-label">Next Appointment</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== PAGE: APPOINTMENTS ====== -->
+            <div class="page-content page-section" id="page-appointments" style="display:none">
+                <div class="glass-card fade-in">
+                    <h3 style="margin-bottom:var(--spacing-md)">My Appointments</h3>
+                    <div id="patient-appointments">
+                        <div class="empty-state">
+                            <div class="spinner" style="margin:0 auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== PAGE: PRESCRIPTIONS ====== -->
+            <div class="page-content page-section" id="page-prescriptions" style="display:none">
+                <div id="patient-prescriptions">
+                    <div class="empty-state">
+                        <div class="spinner" style="margin:0 auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== PAGE: MEDICAL HISTORY ====== -->
+            <div class="page-content page-section" id="page-history" style="display:none">
+                <div class="glass-card fade-in">
+                    <h3 style="margin-bottom:var(--spacing-lg)">Medical History Timeline</h3>
+                    <div class="timeline" id="medical-timeline" style="padding-left:28px;position:relative">
+                        <div class="empty-state">
+                            <div class="spinner" style="margin:0 auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <!-- jsPDF for PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/patient.js"></script>
+</body>
+
+</html>

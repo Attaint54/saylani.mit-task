@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI Clinic Management SaaS — Secure login for doctors, staff, and patients." />
+  <title>MedVault — Clinic Login</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px;
+    }
+    .password-toggle:hover { color: var(--text-primary); }
+    .input-wrapper { position: relative; }
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: var(--spacing-lg) 0;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+    .register-link {
+      text-align: center;
+      margin-top: var(--spacing-md);
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+    .register-link a {
+      color: var(--primary-400);
+      font-weight: 600;
+      transition: color var(--transition-fast);
+    }
+    .register-link a:hover { color: var(--primary-300); }
+    #register-section { display: none; }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <!-- Left: Login / Register Form -->
+    <div class="auth-left">
+      <div class="auth-card fade-in">
+        <!-- Logo -->
+        <div class="auth-logo">
+          <div class="auth-logo-icon">🏥</div>
+          <div>
+            <span class="sidebar-brand" style="font-size:1.3rem">MedVault</span>
+            <p style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">Clinic Management</p>
+          </div>
+        </div>
+
+        <!-- LOGIN SECTION -->
+        <div id="login-section">
+          <h1>Welcome back</h1>
+          <p class="auth-subtitle">Sign in to access your dashboard</p>
+
+          <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" class="form-input" placeholder="you@clinic.com" required />
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <div class="input-wrapper">
+                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required minlength="6" />
+                <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)">👁</button>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg" id="login-btn" style="margin-top:var(--spacing-md)">
+              Sign In
+            </button>
+          </form>
+
+          <p class="register-link">
+            Are you a patient? <a href="#" onclick="showRegister(event)">Create an account</a>
+          </p>
+        </div>
+
+        <!-- REGISTER SECTION (Patient Self-Registration) -->
+        <div id="register-section">
+          <h1>Create Account</h1>
+          <p class="auth-subtitle">Register as a patient to book appointments</p>
+
+          <form id="register-form" onsubmit="handleRegister(event)">
+            <div class="form-group">
+              <label for="reg-name">Full Name</label>
+              <input type="text" id="reg-name" class="form-input" placeholder="John Doe" required />
+            </div>
+            <div class="form-group">
+              <label for="reg-email">Email Address</label>
+              <input type="email" id="reg-email" class="form-input" placeholder="you@email.com" required />
+            </div>
+            <div class="form-group">
+              <label for="reg-password">Password</label>
+              <div class="input-wrapper">
+                <input type="password" id="reg-password" class="form-input" placeholder="Min 6 characters" required minlength="6" />
+                <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">👁</button>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg" id="register-btn" style="margin-top:var(--spacing-md)">
+              Create Account
+            </button>
+          </form>
+
+          <p class="register-link">
+            Already have an account? <a href="#" onclick="showLogin(event)">Sign in</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Feature Showcase -->
+    <div class="auth-right">
+      <div class="auth-features fade-in">
+        <h2>Digitize Your Clinic</h2>
+        <p style="color:var(--text-secondary);margin-bottom:var(--spacing-xl);font-size:0.95rem">
+          A modern platform to manage patients, appointments, prescriptions, and analytics — all in one place.
+        </p>
+
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">📋</div>
+          <div class="auth-feature-text">
+            <h4>Patient Management</h4>
+            <p>Digital records, medical history timelines, and quick search.</p>
+          </div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">📅</div>
+          <div class="auth-feature-text">
+            <h4>Smart Scheduling</h4>
+            <p>Book, cancel, and track appointments with real-time status.</p>
+          </div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">💊</div>
+          <div class="auth-feature-text">
+            <h4>Digital Prescriptions</h4>
+            <p>Create, view, and download prescriptions as PDF.</p>
+          </div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">📊</div>
+          <div class="auth-feature-text">
+            <h4>Analytics Dashboard</h4>
+            <p>Track performance, patient trends, and clinic revenue.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    // Redirect if already logged in
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        try {
+          const doc = await db.collection('users').doc(user.uid).get();
+          if (doc.exists) {
+            const role = doc.data().role;
+            if (role === 'Admin') window.location.href = 'admin.html';
+            else if (role === 'Doctor') window.location.href = 'doctor.html';
+            else if (role === 'Receptionist') window.location.href = 'receptionist.html';
+            else if (role === 'Patient') window.location.href = 'patient.html';
+          }
+        } catch (e) { /* stay on login */ }
+      }
+    });
+
+    // Form handlers
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) { showToast('Please fill all fields.', 'warning'); return; }
+      await loginUser(email, password);
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      if (!name || !email || !password) { showToast('Please fill all fields.', 'warning'); return; }
+
+      const result = await registerUser(name, email, password, 'Patient');
+      if (result.success) {
+        // Also add to patients collection
+        await db.collection('patients').doc(result.uid).set({
+          name: name,
+          age: '',
+          gender: '',
+          contact: '',
+          email: email,
+          userId: result.uid,
+          createdBy: result.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('Account created! Redirecting...', 'success');
+        setTimeout(() => { window.location.href = 'patient.html'; }, 1200);
+      }
+    }
+
+    // Toggle views
+    function showRegister(e) {
+      e.preventDefault();
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('register-section').style.display = 'block';
+    }
+    function showLogin(e) {
+      e.preventDefault();
+      document.getElementById('register-section').style.display = 'none';
+      document.getElementById('login-section').style.display = 'block';
+    }
+
+    // Password visibility
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+      else { input.type = 'password'; btn.textContent = '👁'; }
+    }
+  </script>
+</body>
+</html>
