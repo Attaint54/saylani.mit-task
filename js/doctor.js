@@ -47,8 +47,16 @@ function toggleSidebar() { document.getElementById('sidebar').classList.toggle('
 // =============================================
 async function loadMyAppointments() {
     try {
-        const snap = await db.collection('appointments').where('doctorId', '==', doctorId).orderBy('date', 'desc').get();
+        console.log("Fetching appointments for doctor ID:", doctorId);
+        const snap = await db.collection('appointments').where('doctorId', '==', doctorId).get();
         myAppointments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        console.log("Appointments found for doctor:", myAppointments.length);
+        // Sort locally to avoid Firestore composite index requirement
+        myAppointments.sort((a, b) => {
+            const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+            return dateB - dateA;
+        });
     } catch (err) {
         console.error(err);
         showToast('Failed to load appointments.', 'error');
@@ -69,8 +77,14 @@ async function loadAllPatients() {
 
 async function loadMyPrescriptions() {
     try {
-        const snap = await db.collection('prescriptions').where('doctorId', '==', doctorId).orderBy('createdAt', 'desc').get();
+        const snap = await db.collection('prescriptions').where('doctorId', '==', doctorId).get();
         myPrescriptions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Sort locally
+        myPrescriptions.sort((a, b) => {
+            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+            return dateB - dateA;
+        });
     } catch (err) {
         console.error(err);
     }

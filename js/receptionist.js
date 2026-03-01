@@ -69,8 +69,14 @@ async function loadDoctors() {
 
 async function loadAppointments() {
     try {
-        const snap = await db.collection('appointments').orderBy('date', 'desc').get();
+        const snap = await db.collection('appointments').get();
         appointments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Local sort to avoid index requirement
+        appointments.sort((a, b) => {
+            const dA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            const dB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+            return dB - dA;
+        });
         renderAppointmentsTable(appointments);
     } catch (err) {
         console.error(err);
@@ -327,9 +333,14 @@ async function handleBookAppointment(e) {
     btn.textContent = 'Booking...';
 
     try {
+        const selectedPatient = patients.find(p => p.id === patientId);
+        const selectedDoctor = doctors.find(d => d.id === doctorId);
+
         await db.collection('appointments').add({
             patientId,
+            patientName: selectedPatient?.name || '',
             doctorId,
+            doctorName: selectedDoctor?.name || 'Doctor',
             date: new Date(date),
             reason,
             status: 'Pending',
@@ -366,42 +377,51 @@ async function updateApptStatus(id, status) {
 // =============================================
 // Daily Schedule
 // =============================================
-function loadSchedule() {
+async function loadSchedule() {
     const dateVal = document.getElementById('schedule-date').value || todayStr();
     document.getElementById('schedule-date-label').textContent = new Date(dateVal + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    const dayAppts = appointments.filter(a => {
-        const d = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-        return d.toISOString().split('T')[0] === dateVal;
-    }).sort((a, b) => {
-        const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-        const db2 = b.date?.toDate ? b.date.toDate() : new Date(b.date);
-        return da - db2;
-    });
+    try {
+        // Fetch all appointments to avoid indexing issues with combined filters
+        const snap = await db.collection('appointments').get();
+        const allAppts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    const container = document.getElementById('schedule-list');
-    if (dayAppts.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗓️</div><p>No appointments scheduled for this day.</p></div>`;
-        return;
-    }
+        const dayAppts = allAppts.filter(a => {
+            const d = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            return d.toISOString().split('T')[0] === dateVal;
+        }).sort((a, b) => {
+            const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            const db2 = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+            return da - db2;
+        });
 
-    container.innerHTML = dayAppts.map(a => {
-        const patient = patients.find(p => p.id === a.patientId);
-        const doctor = doctors.find(d => d.id === a.doctorId);
-        const d = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-        const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        const statusClass = a.status === 'Completed' ? 'badge-success' : a.status === 'Confirmed' ? 'badge-info' : 'badge-warning';
-        return `
+        const container = document.getElementById('schedule-list');
+        if (dayAppts.length === 0) {
+            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗓️</div><p>No appointments scheduled for this day.</p></div>`;
+            return;
+        }
+
+        container.innerHTML = dayAppts.map(a => {
+            const patient = patients.find(p => p.id === a.patientId);
+            const doctor = doctors.find(d => d.id === a.doctorId);
+            const d = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const statusClass = a.status === 'Completed' ? 'badge-success' : a.status === 'Confirmed' ? 'badge-info' : 'badge-warning';
+            return `
       <div class="schedule-slot">
         <div class="schedule-time">${time}</div>
         <div class="schedule-details">
-          <div class="schedule-patient">${esc(patient?.name || '—')}</div>
-          <div class="schedule-doctor">Dr. ${esc(doctor?.name || '—')} · ${esc(a.reason || 'General')}</div>
+          <div class="schedule-patient">${esc(patient?.name || a.patientName || '—')}</div>
+          <div class="schedule-doctor">Dr. ${esc(doctor?.name || a.doctorName || '—')} · ${esc(a.reason || 'General')}</div>
         </div>
         <span class="badge ${statusClass}">${a.status}</span>
       </div>
     `;
-    }).join('');
+        }).join('');
+    } catch (err) {
+        console.error('Schedule Load Error:', err);
+        showToast('Error loading schedule.', 'error');
+    }
 }
 
 function renderSchedulePreview() {

@@ -174,7 +174,9 @@ function requireAuth(allowedRoles = []) {
             let userData = {};
 
             if (!userDoc.exists) {
-                // Auto-create as Patient if missing here too (failsafe)
+                // Check if a patient record already exists with this email (created by receptionist)
+                const patientSnap = await db.collection('patients').where('email', '==', user.email).limit(1).get();
+
                 userData = {
                     uid: user.uid,
                     name: user.displayName || 'New Patient',
@@ -183,15 +185,26 @@ function requireAuth(allowedRoles = []) {
                     subscriptionPlan: 'Free',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
-                await db.collection('users').doc(user.uid).set(userData);
 
-                await db.collection('patients').doc(user.uid).set({
-                    name: user.displayName || 'New Patient',
-                    email: user.email,
-                    age: '', gender: '', contact: '',
-                    userId: user.uid, createdBy: user.uid,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
+                if (!patientSnap.empty) {
+                    // Update existing patient record with the UID
+                    const existingPt = patientSnap.docs[0];
+                    userData.name = existingPt.data().name || userData.name;
+                    await db.collection('patients').doc(existingPt.id).update({
+                        userId: user.uid
+                    });
+                } else {
+                    // Create new patient record linked to UID
+                    await db.collection('patients').doc(user.uid).set({
+                        name: user.displayName || 'New Patient',
+                        email: user.email,
+                        age: '', gender: '', contact: '',
+                        userId: user.uid, createdBy: user.uid,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                }
+
+                await db.collection('users').doc(user.uid).set(userData);
             } else {
                 userData = userDoc.data();
             }

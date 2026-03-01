@@ -75,8 +75,16 @@ async function loadDoctors() {
 async function loadPatientAppointments() {
     if (!patientData) return;
     try {
-        const snap = await db.collection('appointments').where('patientId', '==', patientData.id).orderBy('date', 'desc').get();
+        console.log("Fetching appointments for patient ID:", patientData.id);
+        const snap = await db.collection('appointments').where('patientId', '==', patientData.id).get();
         patientAppts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        console.log("Appointments found for patient:", patientAppts.length);
+        // Sort locally to avoid Firestore composite index requirement
+        patientAppts.sort((a, b) => {
+            const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+            return dateB - dateA;
+        });
     } catch (err) {
         console.error(err);
         showToast('Failed to load appointments.', 'error');
