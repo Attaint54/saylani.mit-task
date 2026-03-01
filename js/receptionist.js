@@ -460,6 +460,13 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('active'); });
 });
 
+// Escape key to close modals
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+    }
+});
+
 // =============================================
 // Helpers
 // =============================================

@@ -119,6 +119,7 @@ function renderProfile() {
 
 function openEditProfileModal() {
     if (!patientData) return;
+    document.getElementById('edit-profile-name').value = patientData.name || '';
     document.getElementById('edit-profile-age').value = patientData.age || '';
     document.getElementById('edit-profile-gender').value = patientData.gender || '';
     document.getElementById('edit-profile-contact').value = patientData.contact || '';
@@ -127,36 +128,58 @@ function openEditProfileModal() {
 
 async function handleEditProfile(e) {
     e.preventDefault();
+    const name = document.getElementById('edit-profile-name').value.trim();
     const age = document.getElementById('edit-profile-age').value;
     const gender = document.getElementById('edit-profile-gender').value;
     const contact = document.getElementById('edit-profile-contact').value.trim();
+
+    if (!name) { showToast('Name is required.', 'warning'); return; }
 
     const btn = document.getElementById('edit-profile-btn');
     btn.disabled = true;
     btn.textContent = 'Saving...';
 
     try {
-        await db.collection('patients').doc(patientData.id).update({
+        const batch = db.batch();
+        const ptRef = db.collection('patients').doc(patientData.id);
+        const userRef = db.collection('users').doc(window.currentUser.uid);
+
+        const updateData = {
+            name: name,
             age: age ? parseInt(age) : '',
             gender: gender,
             contact: contact
-        });
+        };
 
-        // Update local state and re-render
-        patientData.age = age;
-        patientData.gender = gender;
-        patientData.contact = contact;
+        batch.update(ptRef, updateData);
+        batch.update(userRef, { name: name, gender: gender });
+
+        await batch.commit();
+
+        // Update local state
+        patientData = { ...patientData, ...updateData };
+        window.currentUser.name = name;
+        window.currentUser.gender = gender;
+
+        // Refresh UI
         renderProfile();
+        document.getElementById('pt-name').textContent = name;
+        document.getElementById('pt-avatar').textContent = name.charAt(0).toUpperCase();
 
         showToast('Profile updated successfully!', 'success');
         closeModal('edit-profile-modal');
     } catch (err) {
         console.error('Failed to update profile:', err);
         showToast('Error updating profile: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
     }
+}
 
-    btn.disabled = false;
-    btn.textContent = 'Save Changes';
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('active');
 }
 
 // =============================================
@@ -498,8 +521,19 @@ async function handleBookAppointment(e) {
     }
 }
 
-// Close modal when clicking outside
-document.getElementById('booking-modal')?.addEventListener('click', function (e) {
-    if (e.target === this) closeBookingModal();
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function (e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+});
+
+// Escape key to close modals
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+    }
 });
 

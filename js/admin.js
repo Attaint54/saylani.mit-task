@@ -649,3 +649,20 @@ function formatDate(ts) {
     if (isNaN(date.getTime())) return '—';
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
+// --- Modal Handling ---
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('active');
+}
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('active'); });
+});
+
+// Escape key to close modals
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+    }
+});
