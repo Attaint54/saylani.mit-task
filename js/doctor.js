@@ -457,9 +457,15 @@ async function handleCreatePrescription(e) {
     btn.textContent = 'Creating...';
 
     try {
+        const patientSpec = allPatientsData.find(p => p.id === patientId);
+        const pName = patientSpec?.name || 'Patient';
+        const dName = doctorDetails?.name || window.currentUser?.name || 'Doctor';
+
         await db.collection('prescriptions').add({
             patientId,
+            patientName: pName,
             doctorId,
+            doctorName: dName,
             diagnosis,
             medicines,
             notes,
@@ -512,13 +518,14 @@ function renderRecentPrescriptions() {
     }
     container.innerHTML = myPrescriptions.slice(0, 10).map(rx => {
         const patient = allPatientsData.find(p => p.id === rx.patientId);
+        const pName = patient?.name || rx.patientName || 'Patient';
         const date = rx.createdAt?.toDate ? rx.createdAt.toDate() : new Date(rx.createdAt);
         const meds = (rx.medicines || []).map(m => `${m.name} (${m.dosage || '—'})`).join(', ');
         return `
       <div class="glass-card" style="margin-bottom:var(--spacing-sm);padding:var(--spacing-md)">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="font-weight:600;font-size:0.92rem">${esc(patient?.name || 'Patient')}</div>
+            <div style="font-weight:600;font-size:0.92rem">${esc(pName)}</div>
             <div style="font-size:0.82rem;color:var(--text-muted)">${meds || 'No medicines'}</div>
             ${rx.diagnosis ? `<div style="font-size:0.82rem;color:var(--primary-400);margin-top:2px">Dx: ${esc(rx.diagnosis)}</div>` : ''}
           </div>

@@ -103,8 +103,14 @@ async function loadPatients() {
 
 async function loadAppointments() {
     try {
-        const snapshot = await db.collection('appointments').orderBy('date', 'desc').get();
+        const snapshot = await db.collection('appointments').get();
         allAppointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Local sort
+        allAppointments.sort((a, b) => {
+            const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+            return dateB - dateA;
+        });
         renderAppointmentsTable();
     } catch (err) {
         console.error('Error loading appointments:', err);

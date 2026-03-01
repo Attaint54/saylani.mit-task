@@ -94,8 +94,14 @@ async function loadPatientAppointments() {
 async function loadPatientPrescriptions() {
     if (!patientData) return;
     try {
-        const snap = await db.collection('prescriptions').where('patientId', '==', patientData.id).orderBy('createdAt', 'desc').get();
+        const snap = await db.collection('prescriptions').where('patientId', '==', patientData.id).get();
         patientRx = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Local sort
+        patientRx.sort((a, b) => {
+            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+            return dateB - dateA;
+        });
     } catch (err) {
         console.error(err);
         showToast('Failed to load prescriptions.', 'error');
