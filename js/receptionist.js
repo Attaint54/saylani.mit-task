@@ -243,18 +243,35 @@ async function handleEditPatient(e) {
     if (!name) { showToast('Name is required.', 'warning'); return; }
 
     try {
-        await db.collection('patients').doc(id).update({
+        const batch = db.batch();
+        const ptRef = db.collection('patients').doc(id);
+
+        const ptDoc = await ptRef.get();
+        const ptData = ptDoc.data();
+
+        const updateData = {
             name,
             age: age ? parseInt(age) : '',
             gender,
             contact
-        });
-        showToast('Patient updated!', 'success');
+        };
+
+        batch.update(ptRef, updateData);
+
+        // Sync name to users collection if linked
+        if (ptData && ptData.userId) {
+            const userRef = db.collection('users').doc(ptData.userId);
+            batch.update(userRef, { name: name });
+        }
+
+        await batch.commit();
+
+        showToast('Patient record updated.', 'success');
         closeModal('edit-patient-modal');
         await loadPatients();
     } catch (err) {
         console.error(err);
-        showToast('Error: ' + err.message, 'error');
+        showToast('Error updating patient: ' + err.message, 'error');
     }
 }
 

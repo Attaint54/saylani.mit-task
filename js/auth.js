@@ -135,6 +135,12 @@ async function registerUser(name, email, password, role, gender = '') {
             await db.collection('doctors').doc(uid).set(baseData);
         } else if (role === 'Receptionist') {
             await db.collection('receptionists').doc(uid).set(baseData);
+        } else if (role === 'Patient') {
+            await db.collection('patients').doc(uid).set({
+                ...baseData,
+                age: '', gender: gender || '', contact: '',
+                createdBy: uid // Self-created
+            }, { merge: true });
         }
 
         return { success: true, uid: uid };
