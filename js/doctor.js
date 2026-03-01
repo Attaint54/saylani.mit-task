@@ -10,6 +10,7 @@ let myPatients = [];
 let allPatientsData = [];
 let myPrescriptions = [];
 let doctorId = null;
+let doctorDetails = null;
 
 // --- Init ---
 document.addEventListener('authReady', async (e) => {
@@ -18,7 +19,7 @@ document.addEventListener('authReady', async (e) => {
     document.getElementById('doc-name').textContent = user.name || 'Doctor';
     document.getElementById('doc-avatar').textContent = (user.name || 'D').charAt(0).toUpperCase();
 
-    await Promise.all([loadMyAppointments(), loadAllPatients(), loadMyPrescriptions()]);
+    await Promise.all([loadMyAppointments(), loadAllPatients(), loadMyPrescriptions(), loadDoctorProfile()]);
     updateDocStats();
     renderTodayAppointments();
     renderAppointmentsList(myAppointments);
@@ -36,7 +37,7 @@ function switchPage(page, el) {
     if (target) { target.style.display = 'block'; target.classList.add('fade-in'); }
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     if (el) el.classList.add('active');
-    const titles = { dashboard: 'Dashboard', appointments: 'My Appointments', patients: 'My Patients', prescriptions: 'Prescriptions' };
+    const titles = { dashboard: 'Dashboard', appointments: 'My Appointments', patients: 'My Patients', prescriptions: 'Prescriptions', profile: 'My Profile' };
     document.getElementById('page-title').textContent = titles[page] || page;
     document.getElementById('sidebar').classList.remove('open');
 }
@@ -60,6 +61,93 @@ async function loadMyAppointments() {
     } catch (err) {
         console.error(err);
         showToast('Failed to load appointments.', 'error');
+    }
+}
+
+async function loadDoctorProfile() {
+    if (!doctorId) return;
+    try {
+        const doc = await db.collection('doctors').doc(doctorId).get();
+        if (doc.exists) {
+            doctorDetails = { id: doc.id, ...doc.data() };
+        } else {
+            // Fallback to basic user info
+            doctorDetails = { id: doctorId, name: window.currentUser.name, email: window.currentUser.email };
+        }
+        renderDoctorProfile();
+    } catch (err) {
+        console.error('Error loading doctor profile:', err);
+    }
+}
+
+function renderDoctorProfile() {
+    if (!doctorDetails) return;
+    document.getElementById('profile-name').textContent = 'Dr. ' + (doctorDetails.name || '—');
+    document.getElementById('profile-specialization').textContent = doctorDetails.specialization || 'General Practitioner';
+    document.getElementById('profile-email').textContent = doctorDetails.email || '';
+    document.getElementById('profile-experience').textContent = (doctorDetails.experience || '0') + ' Years';
+    document.getElementById('profile-contact').textContent = doctorDetails.contact || '—';
+    document.getElementById('profile-bio').textContent = doctorDetails.bio || 'No biography provided.';
+    document.getElementById('doc-profile-avatar').textContent = (doctorDetails.name || 'D').charAt(0).toUpperCase();
+}
+
+function openEditProfileModal() {
+    if (!doctorDetails) return;
+    document.getElementById('edit-name').value = doctorDetails.name || '';
+    document.getElementById('edit-specialization').value = doctorDetails.specialization || '';
+    document.getElementById('edit-experience').value = doctorDetails.experience || '';
+    document.getElementById('edit-contact').value = doctorDetails.contact || '';
+    document.getElementById('edit-bio').value = doctorDetails.bio || '';
+    document.getElementById('edit-profile-modal').classList.add('active');
+}
+
+async function handleEditProfile(e) {
+    e.preventDefault();
+    const name = document.getElementById('edit-name').value.trim();
+    const spec = document.getElementById('edit-specialization').value.trim();
+    const exp = document.getElementById('edit-experience').value;
+    const contact = document.getElementById('edit-contact').value.trim();
+    const bio = document.getElementById('edit-bio').value.trim();
+
+    if (!name) { showToast('Name is required.', 'warning'); return; }
+
+    const btn = document.getElementById('edit-save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const batch = db.batch();
+        const docRef = db.collection('doctors').doc(doctorId);
+        const userRef = db.collection('users').doc(doctorId);
+
+        const updateData = {
+            name: name,
+            specialization: spec,
+            experience: exp,
+            contact: contact,
+            bio: bio
+        };
+
+        batch.set(docRef, updateData, { merge: true });
+        batch.update(userRef, { name: name });
+
+        await batch.commit();
+
+        doctorDetails = { ...doctorDetails, ...updateData };
+        window.currentUser.name = name;
+
+        renderDoctorProfile();
+        document.getElementById('doc-name').textContent = name;
+        document.getElementById('doc-avatar').textContent = name.charAt(0).toUpperCase();
+
+        showToast('Profile updated successfully!', 'success');
+        closeModal('edit-profile-modal');
+    } catch (err) {
+        console.error('Failed to update doctor profile:', err);
+        showToast('Error updating profile: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
     }
 }
 
@@ -136,11 +224,12 @@ function renderTodayAppointments() {
         const d = a.date?.toDate ? a.date.toDate() : new Date(a.date);
         const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         const statusClass = a.status === 'Completed' ? 'badge-success' : a.status === 'Confirmed' ? 'badge-info' : 'badge-warning';
+        const pName = patient?.name || a.patientName || 'Patient';
         return `
       <div class="appt-card">
-        <div class="appt-card-avatar">${(patient?.name || 'P').charAt(0).toUpperCase()}</div>
+        <div class="appt-card-avatar">${pName.charAt(0).toUpperCase()}</div>
         <div class="appt-card-info">
-          <h4>${esc(patient?.name || 'Patient')}</h4>
+          <h4>${esc(pName)}</h4>
           <p>${time} · ${esc(a.reason || 'General Visit')}</p>
         </div>
         <span class="badge ${statusClass}">${a.status || 'Pending'}</span>
@@ -168,11 +257,12 @@ function renderAppointmentsList(list) {
         const dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
         const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         const statusClass = a.status === 'Completed' ? 'badge-success' : a.status === 'Confirmed' ? 'badge-info' : 'badge-warning';
+        const pName = patient?.name || a.patientName || 'Patient';
         return `
       <div class="appt-card">
-        <div class="appt-card-avatar">${(patient?.name || 'P').charAt(0).toUpperCase()}</div>
+        <div class="appt-card-avatar">${pName.charAt(0).toUpperCase()}</div>
         <div class="appt-card-info">
-          <h4>${esc(patient?.name || 'Patient')}</h4>
+          <h4>${esc(pName)}</h4>
           <p>${dateStr} · ${time} · ${esc(a.reason || 'General')}</p>
         </div>
         <span class="badge ${statusClass}">${a.status || 'Pending'}</span>

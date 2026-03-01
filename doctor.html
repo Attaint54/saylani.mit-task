@@ -33,6 +33,9 @@
                 <a class="nav-item" onclick="switchPage('prescriptions', this)">
                     <span class="nav-icon">💊</span> Prescriptions
                 </a>
+                <a class="nav-item" onclick="switchPage('profile', this)">
+                    <span class="nav-icon">👤</span> My Profile
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <a class="nav-item" onclick="logoutUser()" style="color:var(--danger)">
@@ -154,6 +157,33 @@
                 </div>
             </div>
 
+            <!-- ====== PAGE: PROFILE ====== -->
+            <div class="page-content page-section" id="page-profile" style="display:none">
+                <div class="glass-card profile-card fade-in" id="profile-card">
+                    <div class="profile-avatar" id="doc-profile-avatar">D</div>
+                    <div class="profile-info">
+                        <div style="display:flex;justify-content:space-between;align-items:start">
+                            <div>
+                                <h2 id="profile-name">Dr. —</h2>
+                                <p id="profile-specialization" style="color:var(--primary-400);font-weight:600">—</p>
+                                <p id="profile-email" style="font-size:0.9rem;color:var(--text-muted)">—</p>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="openEditProfileModal()">Edit
+                                Profile</button>
+                        </div>
+                        <div class="profile-meta mt-md">
+                            <div class="meta-item"><small>Experience</small><span id="profile-experience">—</span></div>
+                            <div class="meta-item"><small>Contact</small><span id="profile-contact">—</span></div>
+                            <div class="meta-item"><small>Rating</small><span>⭐ 4.8</span></div>
+                        </div>
+                        <div class="mt-md">
+                            <small style="color:var(--text-muted)">Biography</small>
+                            <p id="profile-bio" style="font-size:0.92rem;line-height:1.6;margin-top:4px">—</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- ====== PAGE: PRESCRIPTIONS ====== -->
             <div class="page-content page-section" id="page-prescriptions" style="display:none">
                 <div class="section-header">
@@ -231,6 +261,43 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/doctor.js"></script>
+    <!-- ====== EDIT PROFILE MODAL ====== -->
+    <div class="modal-overlay" id="edit-profile-modal">
+        <div class="modal" style="max-width:500px">
+            <div class="modal-header">
+                <h3>✏️ Edit Profile</h3>
+                <button class="modal-close" onclick="closeModal('edit-profile-modal')">✕</button>
+            </div>
+            <form id="edit-profile-form" onsubmit="handleEditProfile(event)">
+                <div class="form-group">
+                    <label for="edit-name">Full Name</label>
+                    <input type="text" id="edit-name" class="form-input" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit-specialization">Specialization</label>
+                    <input type="text" id="edit-specialization" class="form-input" placeholder="e.g. Cardiologist"
+                        required />
+                </div>
+                <div class="form-group">
+                    <label for="edit-experience">Years of Experience</label>
+                    <input type="number" id="edit-experience" class="form-input" min="0" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit-contact">Contact Number</label>
+                    <input type="tel" id="edit-contact" class="form-input" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit-bio">Short Bio</label>
+                    <textarea id="edit-bio" class="form-input form-textarea" rows="3"
+                        placeholder="Tell patients about yourself..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg" id="edit-save-btn"
+                    style="width:100%;justify-content:center;margin-top:var(--spacing-md)">
+                    Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
 </body>
 
 </html>
